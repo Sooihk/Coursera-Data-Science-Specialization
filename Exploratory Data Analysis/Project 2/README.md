@@ -230,7 +230,7 @@ county_plot <- ggplot(vehicle_emission, aes(x=factor(year), y=Emissions/1000, fi
 print(county_plot)
 ```
 
-From the following plot, coal combustion related sources have decreased from 1999 to 2008: 
+From the following plot, Los Angeles county has the greatest changes over time in motor vehicle emissions: 
 
 ![plot6.png](./plot6.png)
 
