@@ -123,7 +123,6 @@ Filter out Baltimore City PM2.5 Emissions from 1999 to 2008.
 
 ```{r Q3prep, cache=TRUE}
 library("dplyr")
-library("ggplot2")
 Baltimore_type_emissions <- NEI %>% filter(fips=="24510") %>% group_by(year, type) %>% summarise(Emissions=sum(Emissions))
 png("plot3.png")
 ```
@@ -131,6 +130,7 @@ png("plot3.png")
 Plot Baltimore City PM2.5 Emissions from 1999 to 2008 split by types of sources. 
 
 ```{r plot3}
+library("ggplot2")
 b_t_plot <- ggplot(data=Baltimore_type_emissions, mapping=aes(x=factor(year), y=Emissions, fill=type)) +
   geom_bar(stat="identity") + facet_grid(.~type) + labs(x="Year",y=expression('PM'[2.5]*' Emission'), 
   title=expression('PM'[2.5]*' Emissions in Baltimore City From 1999-2008 By Source Type')) + theme_bw() + 
@@ -143,3 +143,31 @@ From the following plot, `NON-ROAD`, `NONPOINT`, `ON-ROAD`, and `POINT` source t
 
 ![plot3.png](./plot3.png)
 
+### Question 4
+Across the United States, how have emissions from coal combustion-related sources changed from 1999 to 2008?
+
+Filter out emmisions from coal combusted sources from 1999 to 20008 all across the United States.
+
+```{r Q4prep, cache=TRUE}
+library("dplyr")
+
+#filter out SCC numbers containing coal in their short.name 
+coal_SCC <- SCC[grep("coal", SCC$Short.Name, ignore.case=TRUE), "SCC"]
+#Using SCC numbers matching coal, subset NEI SCC numbers matching coal_SCC SCC numbers
+coal_nEI <- NEI %>% filter(SCC %in% coal_SCC) %>% group_by(year) %>% summarise(Emissions=sum(Emissions)) 
+```
+
+Plot coal combustion emission sources from 1999 to 2008. 
+
+```{r plot4}
+library("ggplot2")
+coal_plot <- ggplot(coal_nEI, aes(x=factor(year), y=Emissions/1000, fill=year)) + geom_bar(stat="identity") +
+  labs(x="Year", y=expression('PM'[2.5]*' Emissions in Kilotons'), title="Coal Combustion Emissions from 1999-2008") +
+  theme_bw() + theme(legend.position = "none")
+  
+print(coal_plot)
+```
+
+From the following plot, coal combustion related sources have decreased from 1999 to 2008: 
+
+![plot4.png](./plot4.png)
