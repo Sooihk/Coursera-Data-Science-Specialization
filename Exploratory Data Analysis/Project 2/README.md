@@ -146,7 +146,7 @@ From the following plot, `NON-ROAD`, `NONPOINT`, `ON-ROAD`, and `POINT` source t
 ### Question 4
 Across the United States, how have emissions from coal combustion-related sources changed from 1999 to 2008?
 
-Filter out emmisions from coal combusted sources from 1999 to 20008 all across the United States.
+Filter out emmisions from coal combusted sources from 1999 to 2008 all across the United States.
 
 ```{r Q4prep, cache=TRUE}
 library("dplyr")
@@ -171,3 +171,66 @@ print(coal_plot)
 From the following plot, coal combustion related sources have decreased from 1999 to 2008: 
 
 ![plot4.png](./plot4.png)
+
+### Question 5
+How have emissions from motor vehicle sources changed from 1999 to 2008 in Baltimore City?
+
+Filter out emisions from motor vehicle sources from 1999 to 2008 in Baltimore City.
+
+```{r Q5prep, cache=TRUE}
+library("dplyr")
+
+#Filter out SCC numbers containing motor vehicle description in short.name
+motor_vehicle_SCC <- SCC[grep("vehicle", SCC$Short.Name,ignore.case=TRUE), "SCC"]
+#Filter out motor vehicles emissions from NEI using SCC numbers obtained from SCC db
+motor_vehicle_NEI <- NEI %>% filter(SCC %in% motor_vehicle_SCC & fips == "24510") %>% group_by(year) %>%
+  summarise(Emissions=sum(Emissions))
+```
+
+Plot motor vehicle emission sources from 1999 to 2008. 
+
+```{r plot5}
+library("ggplot2")
+vehicle_plot <- ggplot(motor_vehicle_NEI, aes(x=factor(year), y=Emissions/1000, fill=year)) + geom_bar(stat="identity") +
+  labs(x="Year", y=expression('PM'[2.5]*' Emissions in Kilotons'), title="Motor Vehicle Emissions in Baltimore City from 1999 to 2008") +
+  theme_bw() + theme(legend.position = "none")
+print(vehicle_plot)
+```
+
+From the following plot, motor vehicles emission soruces have decreased from 1999 to 2008: 
+
+![plot5.png](./plot5.png)
+
+### Question 6
+Compare emissions from motor vehicle sources in Baltimore City with emissions from motor vehicle sources in Los Angeles County, California ( == “06037”). Which city has seen greater changes over time in motor vehicle emissions?
+
+Obtain SCC motor vehicle numbers to filter NEI database for vehicle SCCs, and Los Angeles and Baltimore counties motor vehicle emissions. 
+
+```{r Q6prep, cache=TRUE}
+library("dplyr")
+
+#Obtain SCC motor vehicle codes from SCC db
+vehicle_SCC <- SCC[grep("vehicle", SCC$Short.Name, ignore.case=TRUE), "SCC"]
+#Filter out NEI motor vehicle
+vehicle_emission <- NEI %>% filter(SCC %in% vehicle_SCC & fips %in% c("24510", "06037")) %>% group_by(fips, year) %>%
+  summarise(Emissions=sum(Emissions)) 
+
+#insert new variable (county) into database
+vehicle_emission$county <- "Baltimore City"
+vehicle_emission[grep("06037", vehicle_emission$fips),]$county <- "Los Angeles"
+```
+
+Plot motor vehicle emission sources from 1999 to 2008 for Los Angeles and Baltimore city. 
+
+```{r plot6}
+library("ggplot2")
+county_plot <- ggplot(vehicle_emission, aes(x=factor(year), y=Emissions/1000, fill=year)) + geom_bar(stat="identity") +
+  facet_grid(.~county) + labs(x="Year", y=expression('PM'[2.5]*' Emissions in Kiloton', title="Los Angeles vs Baltimore
+  Vehicle Emissions")) + theme_bw() + theme(legend.position="none")
+print(county_plot)
+```
+
+From the following plot, coal combustion related sources have decreased from 1999 to 2008: 
+
+![plot6.png](./plot6.png)
+
