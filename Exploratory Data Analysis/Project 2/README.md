@@ -91,4 +91,5 @@ barplot(emissions_per_year$Emissions/1000, names.arg=emissions_per_year$year, xl
         col=as.factor(emissions_per_year$year))
 ```
 From the following plot, we see total emissions from all sources have decreased from 1999 to 2008
-[plot1.png](./plot1.png)
+
+![plot1.png](./plot1.png)
