@@ -90,6 +90,24 @@ barplot(emissions_per_year$Emissions/1000, names.arg=emissions_per_year$year, xl
         ylab=expression('PM'[2.5]*' in Kilotons'), main=expression('Annual PM'[2.5]*' Emission from 1999 to 2008'),
         col=as.factor(emissions_per_year$year))
 ```
-From the following plot, we see total emissions from all sources have decreased from 1999 to 2008
+From the following plot, we see total emissions from all sources have decreased from 1999 to 2008:
 
 ![plot1.png](./plot1.png)
+
+### Question 2
+Have total emissions from PM2.5 decreased in the Baltimore City, Maryland (\color{red}{\verb|fips == "24510"|}fips == "24510") from 1999 to 2008? Use the base plotting system to make a plot answering this question.
+
+Filter out Baltimore City PM2.5 Emissions from 1999 to 2008. 
+```{r Q2prep, cache=TRUE}
+library("dplyr")
+Baltimore_emissions <- NEI %>% filter(fips=="24510") %>% group_by(year) %>% summarise(Emissions=sum(Emissions))
+```
+Plot Baltimore City PM2.5 Emissions from 1999 to 2008.
+```{r plot2}
+barplot(Baltimore_emissions$Emissions/1000, names.arg=Baltimore_emissions$year, xlab="Year",
+        ylab=expression('PM'[2.5]*' in Kiltotons'), main=expression('Annual Emissions of PM'[2.5]*' from 1999 to 2008'),
+        col=as.factor(Baltimore_emissions$year))
+```
+From the following plot, we see total emissions from all sources have decreased from 1999 to 2008:
+
+![plot2.png](./plot2.png)
