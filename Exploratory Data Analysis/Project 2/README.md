@@ -79,3 +79,16 @@ if (!exists("SCC")) {
 # Questions
 ## Question 1
 Have total emissions from PM2.5 decreased in the United States from 1999 to 2008? Using the base plotting system, make a plot showing the total PM2.5 emission from all sources for each of the years 1999, 2002, 2005, and 2008.
+
+Aggregate total emissions of PM2.5 from all sources from 1999 to 2008. 
+```{r Q1prep, cache=TRUE}
+emissions_per_year <- aggregate(Emissions ~ year, NEI, FUN=sum)
+```
+Plot the total PM2.5 Emissions from all sources from 1999 to 2008.
+```{r plot1}
+barplot(emissions_per_year$Emissions/1000, names.arg=emissions_per_year$year, xlab="Year", 
+        ylab=expression('PM'[2.5]*' in Kilotons'), main=expression('Annual PM'[2.5]*' Emission from 1999 to 2008'),
+        col=as.factor(emissions_per_year$year))
+```
+From the following plot, we see total emissions from all sources have decreased from 1999 to 2008
+[plot1.png](./plot1.png)
