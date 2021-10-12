@@ -121,10 +121,12 @@ stepsPerDay
 ggplot(stepsPerDay, aes(x=Date, y=Steps)) + geom_bar(stat="identity", fill="steelblue") +
     labs(x="Date", y="Steps", title="Number of steps taken each day") + theme_bw() 
 ```
+![plot1.png](./plot1.png)
+
 ```{r histogram}
 ggplot(stepsPerDay, aes(Steps)) + geom_histogram(binwidth=2000, fill = "steelblue", alpha=0.7) + labs(x="Total Steps", y="Frequency", title = "Historgram of total steps per day") + theme(plot.title = element_text(hjust = 0.5), axis.title.x = element_text(face="bold"), axis.title.y = element_text(face = "bold"))
 ```
-
+![plot2.png](./plot2.png)
 
 3. Calculate and report the mean and median of the total number of steps taken per day  
 
@@ -147,6 +149,7 @@ interval_average_steps <- aggregate(steps~interval, activity, FUN = mean, na.act
 interval_average_steps$time <- interval_average_steps$interval/100
 ggplot(interval_average_steps, aes(time, steps)) + geom_line(colour="steelblue", size = 1) +  labs(x = "Time", y = "Average number of steps", title = "Average steps per time") + theme(plot.title = element_text(face="bold", hjust = 0.5), axis.title.x = element_text(face = "bold"), axis.text.y = element_text(face = "bold"))
 ```
+![plot3.png](./plot3.png)
 
 2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?  
 
@@ -185,6 +188,8 @@ new_steps_day <- fill_in_missing %>% group_by(date) %>% summarise(steps=sum(step
 colnames(new_steps_day) <- c("Date", "TotalSteps")
 ggplot(new_steps_day, aes(TotalSteps)) + geom_histogram(binwidth=2000, fill = "steelblue", alpha=0.7) + labs(x="Total Steps", y="Frequency", title = "Historgram of total steps per day") + theme(plot.title = element_text(hjust = 0.5), axis.title.x = element_text(face="bold"), axis.title.y = element_text(face = "bold"))
 ```
+![plot4.png](./plot4.png)
+
 ``` {r newmeanMedian}
 #obtain mean for each day
 meanSteps2 <- fill_in_missing %>% group_by(date) %>% summarise(steps=mean(steps))
@@ -195,9 +200,6 @@ medianSteps2 <- fill_in_missing %>% group_by(date) %>% summarise(steps=median(un
 colnames(medianSteps2) <- c("Date", "Median Steps")
 medianSteps2
 ```
-
-
-
 
 ### Are there differences in activity patterns between weekdays and weekends?
 For this part the weekdays()function may be of some help here. Use the dataset with the filled-in missing values for this part.
@@ -222,3 +224,5 @@ weekDT <- aggregate(steps ~ interval + dayType, data=fill_in_missing, FUN=mean, 
 weekDT$hour <- weekDT$interval/100
 ggplot(weekDT, aes(hour, steps)) + geom_line(col="steelblue", size = 0.8) + labs(x = "Hour of day", y = "Steps", title = "Average number of steps per interval: Weekday vs Weekend") + facet_grid(dayType ~ .) + theme(plot.title = element_text(hjust = 0.5), axis.title.x = element_text(face="bold"), axis.title.y = element_text(face="bold")) 
 ```
+
+![plot5.png](./plot5.png)
