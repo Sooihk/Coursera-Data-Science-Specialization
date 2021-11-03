@@ -29,3 +29,6 @@ Your data analysis must address the following questions:
 
 2. Across the United States, which types of events have the greatest economic consequences?  
 
+## Report
+
+Link for my report for this [project](https://rpubs.com/Sooihk117/Coursera-ReproducibleResearch-CourseProject2)
