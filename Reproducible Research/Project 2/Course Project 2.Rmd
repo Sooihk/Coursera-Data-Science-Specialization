@@ -1,0 +1,139 @@
+---
+title: "US Severe Weather impacts on Health and Economic Sectors"
+author: "Sooihk Ro"
+date: "10/27/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Synopsis
+
+For this report, the US National Oceanic and Atmospheric Administration's (NOAA) database will be analyzed to determine which types of events are most harmful with respect to population health and have the greatest economic consequences. Analysis determined that tornadoes to be the most harmful weather event on population health and floods to be the most economically harmful type of weather event. NOAA's database can be downloaded from the course website:
+
+- Dataset: [Storm Data](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2) [47Mb]
+
+
+## Data Processing
+
+### Loading the dataset
+Download the data zip file and unzip it. Read csv file if data object does not exist in environment. 
+
+```{r loadData, message=FALSE, warning=FALSE}
+setwd("C:/Users/aduro/Desktop/Coding/Data Science Coursera/Data Science Specialization/5 Reproducible Research/Module 4/")
+library(ggplot2)
+library(dplyr)
+library(lubridate)
+library(reshape2)
+library(tidyr)
+#set directory
+
+
+stormFile <- "repdata_data_StormData.csv.bz2"
+#if zip file does not exist, download from web
+if(!file.exists(stormFile)) {
+    download_url <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
+    download.file(download_url, destfile = stormFile)
+}
+
+if(!exists("stormData")){
+    stormData <- read.csv("repdata_data_StormData.csv.bz2")
+}
+```
+
+### Examing structure of dataset
+
+```{r examineData}
+str(stormData)
+```
+There are  902,297 observations with 37 variables. We only need a subset from this dataset concerning health and economic impacts.
+
+### Selecting variables of interest
+The following variables were selected from the main database for our analysis:
+
+- BGN_DATE: year of event 
+
+- EVTYPE:  type of events
+
+- FATALITIES: number of approximated deaths
+
+- INJURIES: number of approximated injuries
+
+- PROPDMG: approximated property damage
+
+- PROPDMGEXP: property damage exponent 
+
+- CROPDMG: approximated crop damage
+
+- CROPDMGEXP: crop damage exponent
+
+
+From our subselected data, events before 1996 were excluded because only a small subset of events were listed which limits our analysis. Events where there were no economic of health impacts are also excluded. Variables PROPEXP and CROPEXP represent the magnitude of cost in single digits, thousands(K), millions(M), and billions(B). The former variables were converted from character symbols to represent dollars in numeric values.
+
+
+```{r subset}
+report_storm_Data <- select(stormData, BGN_DATE, EVTYPE, FATALITIES, INJURIES, PROPDMG, PROPDMGEXP, CROPDMG, CROPDMGEXP) 
+
+#Format BGN_DATE as a date variable 
+report_storm_Data$BGN_DATE <- as.Date(report_storm_Data$BGN_DATE, "%m/%d/%Y")
+#Make a year variable
+report_storm_Data$Year <- year(report_storm_Data$BGN_DATE)
+
+#Filter out events before 1996 and select only events where there were damages
+report_storm_Data <- filter(report_storm_Data, Year > 1995)
+report_storm_Data <- filter(report_storm_Data, FATALITIES > 0 | INJURIES > 0 | PROPDMG > 0 | CROPDMG > 0)
+
+#convert PROPDMGEXP and CROPDMGEXP variables to represent numeric values
+report_storm_Data$PROPDMGEXP[!grepl("K|M|B", report_storm_Data$PROPDMGEXP, ignore.case = TRUE)] <- 1
+report_storm_Data$PROPDMGEXP[grep("K", report_storm_Data$PROPDMGEXP, ignore.case = TRUE)] <- 1000
+report_storm_Data$PROPDMGEXP[grep("M", report_storm_Data$PROPDMGEXP, ignore.case = TRUE)] <- 1000000
+report_storm_Data$PROPDMGEXP[grep("B", report_storm_Data$PROPDMGEXP, ignore.case = TRUE)] <- 1000000000
+
+report_storm_Data$CROPDMGEXP[!grepl("K|M|B", report_storm_Data$CROPDMGEXP, ignore.case = TRUE)] <- 1
+report_storm_Data$CROPDMGEXP[grep("K", report_storm_Data$CROPDMGEXP, ignore.case = TRUE)] <- 1000
+report_storm_Data$CROPDMGEXP[grep("M", report_storm_Data$CROPDMGEXP, ignore.case = TRUE)] <- 1000000
+report_storm_Data$CROPDMGEXP[grep("B", report_storm_Data$CROPDMGEXP, ignore.case = TRUE)] <- 1000000000
+table(report_storm_Data$PROPDMGEXP)
+table(report_storm_Data$CROPDMGEXP)
+
+#make 2 variables to hold property and crop damage cost
+report_storm_Data <- mutate(report_storm_Data, PROPDMGCOST = PROPDMG * as.numeric(PROPDMGEXP), CROPDMGCOST = CROPDMG * as.numeric(CROPDMGEXP))
+
+#fix duplicates based on upper case
+report_storm_Data$EVTYPE <- toupper(report_storm_Data$EVTYPE)
+```
+
+## Results
+### Events most harmful with respect to population health
+The top 10 weather events that have the most impact on human health were chosen by estimating the total injuries and fatalities for each event. Plot 1 shows that the most dangerous events on health are tornadoes, excessive heat and floods. 
+
+```{r healthImpact}
+#select top 10 injury and fatality events 
+health_Impact <- select(report_storm_Data, EVTYPE, INJURIES, FATALITIES) %>% group_by(EVTYPE) %>% summarise(injuries=sum(INJURIES), fatalities=sum(FATALITIES), total = sum(INJURIES) + sum(FATALITIES)) %>% arrange(desc(total)) %>% head(10)
+
+#use pivot longer to transform dataset to make it easier to barplot
+long_health_Impact <- pivot_longer(health_Impact, -EVTYPE, names_to="casualty", values_to = "value") 
+
+ggplot(long_health_Impact, aes(x=reorder(EVTYPE, -value), y=value)) + geom_bar(stat="identity",aes(fill=casualty), position="dodge") + labs(x="Event Type", y="Frequency", title="Top 10 Most Harmful Weather Events On Health") + theme(plot.title=element_text(face="bold",hjust=0.5 ), axis.text.x = element_text(angle=45, hjust=0.9))
+
+                
+```
+
+### Events having the greatest economic consequences
+The top 10 weather events that have the most economic impact were chosen by estimating crop and property damages for each event. Based on the plot 2, floods, hurricanes/typhoones, and storm surges cause the most economic impact on our society. 
+```{r economicImpact}
+#select top 10 events causing most property and crop damage
+economic_Impact <- select(report_storm_Data, EVTYPE, PROPDMGCOST, CROPDMGCOST) %>% group_by(EVTYPE) %>% summarise(PropertyCost=sum(PROPDMGCOST), CropCost=sum(CROPDMGCOST), total=sum(PROPDMGCOST)+sum(CROPDMGCOST)) %>% arrange(desc(total)) %>% head(10)
+
+#transform database with pivot_longer to a more suitable database for bar plotting
+long_economic_Impact <- pivot_longer(economic_Impact, -EVTYPE, names_to = "damages", values_to = "value")
+
+ggplot(long_economic_Impact, aes(x=reorder(EVTYPE, -value), y=value)) + geom_bar(stat="identity", aes(fill=damages), position="dodge") + labs(x="Event Type", y="Cost of damages in dollars", title="Top 10 Weather Events that cause the most Economic Impact") + theme(plot.title=element_text(face="bold", hjust=0.5), axis.text.x=element_text(angle=45, hjust=0.9))
+```
+
+
+
+
