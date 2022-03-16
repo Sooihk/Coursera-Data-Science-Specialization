@@ -1,0 +1,70 @@
+---
+title: 'Part 1: Simulation Exercise Instructions'
+author: "Sooihk Ro"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Objective 
+This paper will investigate the exponential distribution in R and compare it with the Central Limit Theorem. Lambda will be set to 0.2 for all simulation analysis. This investigation will compare the distribution of averages of 40 exponentials over 1000 simulations.
+
+## Simulations
+Set simulation variables lambda, number of simulations, and exponential. Set seed for reproducibility. 
+```{r, echo=TRUE}
+set.seed(1234)
+lambda=0.2
+n=40
+sims = 1000
+```
+
+Simulate 40 exponentials and calculate the mean of the the simulated exponentials. 
+```{r echo = TRUE}
+run_sims <- replicate(sims, rexp(n,lambda))
+mean_sims <- apply(run_sims, 2, mean)
+```
+
+## Sample Mean versus Theoretical Mean
+Calculate and compare sample mean with theoretical mean. The theoretical mean of an exponential distribution is 1/lambda. The sample mean is 5.002242 and the theoretical mean is 5.
+```{r, echo=TRUE}
+sampleMean <- mean(mean_sims)
+sampleMean
+theoreticalMean <- 1/lambda 
+theoreticalMean
+```
+
+The figure below illustrates a histogram of the simulated exponential sample means with the red line representing the sample mean and the blue line representing the theoretical mean. 
+
+```{r, echo=TRUE}
+hist(mean_sims, main="Simulated Exponential Sample Means", col="lightblue", breaks=50)
+abline(v=sampleMean, col="red")
+abline(v=theoreticalMean, col="blue")
+```
+
+## Sample Variance versus Theoretical Variance 
+Calculate and compare sample standard deviation and variance with theoretical standard deviation and variance. Standard deviation of a exponential distribution is (1/lambda)/sqrt(n). The variance of an exponential distribution is the square of the standard deviation. 
+```{r, echo=TRUE}
+sampleSD <- sd(mean_sims)
+sampleVar <- var(mean_sims)
+sampleVar
+
+theoreticalSD <- (1/lambda)/sqrt(n)
+theoreticalVar <- theoreticalSD^2
+theoreticalVar
+
+difference = theoreticalVar-sampleVar
+difference
+```
+There is only a slight difference (~0.0434) between the sample variance and the theoretical varuance. 
+
+## Distribution 
+The figure below is a density histogram with an normal distribution overlay that uses theoretical mean and standard deviation. Comparing the density histogram to the normal distribution overlay illustrates that the sample distribution is approximately normal.
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
+library(ggplot2)
+ggplot(data.frame(y=mean_sims), aes(x=y)) + geom_histogram(aes(y=..density..), color="black", fill="lightblue") + stat_function(fun=dnorm, args=list(mean=lambda^(-1), sd=(lambda*sqrt(n))^(-1)), size=2) + labs(title="Sample Distribution",x="Simulation Means") + theme(plot.title=element_text(hjust=0.5))
+```
+

@@ -1,0 +1,83 @@
+---
+title: 'Part 2: Basic Inferential Data Analysis Instructions'
+author: "Sooihk Ro"
+date: "3/13/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Objective
+This report will analyze the ToothGrowth data in the R datasets package. Exploratory data analysis will be performed on the dataset. Confidence intervals and hypothesis tests will be utilized to compare tooth growth by supp and dose. 
+
+## Load ToothGrowth data and perform exploratory data analysis
+```{r, echo=TRUE}
+library(datasets)
+data(ToothGrowth)
+str(ToothGrowth)
+head(ToothGrowth)
+summary(ToothGrowth)
+```
+
+```{r}
+library(ggplot2)
+ToothGrowth$dose <- as.factor(ToothGrowth$dose)
+ggplot(data=ToothGrowth, aes(x=dose, y=len)) + geom_boxplot(aes(fill=dose)) + labs(x="Dose Amount", y="Tooth Length", title="Tooth Length vs Dose Amount for each supplement") + facet_grid(.~supp) + theme(plot.title=element_text(hjust=0.5))
+```
+
+## Basic summary of the data
+The boxplot figure above illustrates that a higher dosage amount relates to higher tooth growth. The plot also shows that supplement OJ is generally more effective for tooth grow than VC when the dose amount is from 0.5 to 1.0. Both supplement types at 2 doseage have similar tooth growth. 
+
+## Confidence intervals and Hypothesis Tests
+### 1st Hypothesis
+The first hypothesis test we perform is to test the null hypothesis that the supplement(OJ or VC) does not impact tooth length. H0 hypothesis states that the mean length for supplement VC = the mean length of supplement OJ. The alternative H1 hypothesis states that the mean length for supplement VC != the mean length of supplement OJ. 
+
+```{r, echo=TRUE}
+t.test(len~supp, data=ToothGrowth)
+```
+The t-Test gives us a p-value of 0.06063 which is greater than the alpha level of 0.05. The confidence interval also contains 0 between the interval. These results state that we can not reject the null hypothesis. We can disregard supplement type having an impact on tooth growth from this test. 
+
+### 2nd Hypothesis Test
+The correlation between dosage amount and tooth growth was investigated in which the null hypothesis states increasing the dose amount does not impact the length of the tooth. 
+
+First compare 0.5 and 1 dose amount.
+```{r, echo=TRUE}
+dosetooth_test <- t.test(len~dose, data=subset(ToothGrowth, dose %in% c(0.5,1)))
+p_values <- dosetooth_test$p.value
+conf_interval_min <- dosetooth_test$conf.int[1]
+conf_interval_max <- dosetooth_test$conf.int[2]
+```
+
+Then compare 0.5 and 2 dose amount.
+```{r, echo=TRUE}
+dosetooth_test <- t.test(len~dose, data=subset(ToothGrowth, dose %in% c(1,2)))
+p_values <- c(p_values, dosetooth_test$p.value)
+conf_interval_min <- c(conf_interval_min,dosetooth_test$conf.int[1])
+conf_interval_max <- c(conf_interval_max,dosetooth_test$conf.int[2])
+```
+
+Compare 1 and 2 dose amount. 
+```{r, echo=TRUE}
+dosetooth_test <- t.test(len~dose, data=subset(ToothGrowth, dose %in% c(0.5,2)))
+p_values <- c(p_values, dosetooth_test$p.value)
+conf_interval_min <- c(conf_interval_min,dosetooth_test$conf.int[1])
+conf_interval_max <- c(conf_interval_max,dosetooth_test$conf.int[2])
+```
+
+Create table to showcase results from t.tests.
+```{r, echo=TRUE}
+dose_amounts <- c("0.5-1", "1-2", "0.5-2")
+tooth_dose_table <- data.frame(dose_amounts)
+tooth_dose_table <- cbind(tooth_dose_table, p_values)
+tooth_dose_table <- cbind(tooth_dose_table, conf_interval_min)
+tooth_dose_table <- cbind(tooth_dose_table, conf_interval_max)
+tooth_dose_table
+```
+
+The table above shows p-values and confidence intervals for every dose amount comparison. The p-values are significant since they are much lower than the alpha 0.05 and there is no 0 in any of the confidence intervals which portrays that tooth growth are not the same at different dose amounts. The results indicate a rejection of the null hypothesis that increasing the dose amount does not have an impact on tooth growth. The alternative hypothesis is correct in which increasing the doseage impacts the length of the teeth. 
+
+## Conclusions
+
+Based on the t-tests there is no correlation between supplement type and tooth growth. Doseage amount does have an impact on tooth growth where the higher the doseage the more tooth growth there is. 
