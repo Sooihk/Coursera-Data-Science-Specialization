@@ -1,0 +1,70 @@
+---
+title: "Coursera Regression Models Course Project"
+author: "Sooihk Ro"
+date: "5/16/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Objective
+For this report the mtcars dataset will be analyzed to answer the following questions: 1) is an automatic or manual transmission better for MPG, and 2) Quantify the MPG difference between automatic and manual transmission. 
+
+## Findings
+The findings of the report indicate that manual transmission yields more miles per gallon than automatic transmission. On average a car with manual transmission gets .14 more mpg than automatic cars holding cyl, disp and wt variables constant.
+
+## Exploratory Analysis
+```{r}
+library(ggplot2)
+data(mtcars)
+summary(mtcars)
+head(mtcars)
+
+#Transform variables into factors
+mtcars$cyl <- as.factor(mtcars$cyl)
+mtcars$vs <- as.factor(mtcars$vs)
+mtcars$am <- as.factor(mtcars$am)
+mtcars$gear <- as.factor(mtcars$gear)
+mtcars$carb <- as.factor(mtcars$carb)
+
+#Replace mtcars$am variable from 0-1 to auto-manual
+mtcars$am <- gsub("0", "auto", mtcars$am)
+mtcars$am <- gsub("1", "manual", mtcars$am)
+
+```
+Figure 1. is a boxplot to visualize the effect between automatic and manual transmission on mpg. The figure displays that manual transmission has better mileage per gallon than automatic transmission. 
+```{r Figure 1}
+boxFig <- ggplot(mtcars, aes(x=am, y = mpg, fill=am)) + geom_boxplot() + theme_classic() + labs(x="Transmission Type", y="Miles Per Gallon")
+boxFig
+```
+
+## Statisical Inference
+A t.test function is utilized to test our hypothesis that a manual transmission provides higher miles per gallon than a automatic transmission is statistically significant. The t.test function yields automatic transmission having on average 7 miles per gallon than manual transmission. We can conclude that the difference in mpg between automatic and manual transmission with a 95% confidence interval not containing a value 0 and a small p value.
+```{r t.test}
+t.test(mpg ~ am, mtcars)
+```
+
+## Regression Model
+We start with regressing mpg on the am variable alone. The summary of the model shows an average of 17.1 mpg for automatic and an average 7.2 mpg increase for manual. The R-squared value of .36 tells us that the variable am only explains 36% of the variance. 
+```{r Regression}
+am_regression_model <- lm(mpg~am, mtcars)
+summary(am_regression_model)
+```
+Additional variables will be included to the model to better explain the % variance. Analysis of variance (aov) function will be implemented to the data in order to obtain such variables. 
+```{r aov}
+variance_analysis <- aov(mpg ~ ., mtcars)
+summary(variance_analysis)
+```
+From the summary variables cyl, disp and wt have p values less than .05 which are significant. 
+```{r multivariable regression}
+multi_regression <- lm(mpg ~ cyl + disp + wt + am, mtcars)
+summary(multi_regression)
+```
+The multivariable regression model has an R-squared value of .84 which states the model explains 84% of the variance. The difference between automatic and manual transmmission is 0.14 miles per gallon. Diagnostic plotting shows the residuals are homoscedastic with the Residuals vs Fitted plot. The Normal Q-Q plot shows the distribution of the residuals is roughly normal. 
+
+```{r Diagonstics}
+par(mfrow=c(2,2))
+plot(multi_regression)
+```
